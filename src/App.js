@@ -18,7 +18,7 @@ class App extends Component {
   constructor() {  // Create and initialize state
     super(); 
     this.state = {
-      accountBalance: 1234567.89,
+      accountBalance: 0,
       creditList: [],
       debitList: [],
       currentUser: {
@@ -26,6 +26,34 @@ class App extends Component {
         memberSince: '11/22/99',
       }
     };
+  }
+
+  //helper for balance
+  computeBalance = (credits, debits) => {
+    const sumCredits = (credits || []).reduce((acc, c) => acc + (Number(c.amount) || 0), 0);
+    const sumDebits = (debits || []).reduce((acc, d) => acc + (Number(d.amount) || 0), 0);
+    return sumCredits - sumDebits;
+  }
+
+  componentDidMount() {
+    const creditsURL = 'https://johnnylaicode.github.io/api/credits.json';
+    const debitsURL = 'https://johnnylaicode.github.io/api/debits.json';
+
+    Promise.all([
+      fetch(creditsURL).then(res => res.json()),
+      fetch(debitsURL).then(res => res.json())
+    ])
+    .then(([creditsData, debitsData]) => {
+      const credits = Array.isArray(creditsData) ? creditsData : (creditsData.entries || []);
+      const debits = Array.isArray(debitsData) ? debitsData : (debitsData.entries || []);
+      const accountBalance = this.computeBalance(credits, debits);
+      this.setState({ creditList: credits, debitList: debits, accountBalance });
+      console.log('Loaded credits and debits, accountBalance=', accountBalance);
+    })
+    .catch(err => {
+      console.error('Failed to load credits/debits:', err);
+      this.setState({ creditList: [], debitList: [], accountBalance: 0 });
+    });
   }
 
   // Update state's currentUser (userName) after "Log In" button is clicked
