@@ -120,6 +120,31 @@ class App extends Component {
       return { debitList, accountBalance };
     });
   } 
+//credit
+addCredit = (newCredit) => {
+
+  const amount = Number(newCredit.amount);
+
+  // Validate credit entry
+  if (!newCredit.description || isNaN(amount) || amount <= 0) {
+    console.warn("Invalid credit entry", newCredit);
+    return;
+  }
+
+  // Normalize entry
+  const entry = {
+    id: Date.now(),
+    description: newCredit.description,
+    amount: amount,
+    date: newCredit.date ? newCredit.date : new Date().toISOString()
+  };
+
+  this.setState(prev => {
+    const creditList = [...prev.creditList, entry];
+    const accountBalance = this.computeBalance(creditList, prev.debitList);
+    return { creditList, accountBalance };
+  });
+}
 
 }
 
