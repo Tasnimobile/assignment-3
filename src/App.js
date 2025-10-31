@@ -30,9 +30,10 @@ class App extends Component {
 
   //helper for balance
   computeBalance = (credits, debits) => {
-    const sumCredits = (credits || []).reduce((acc, c) => acc + (Number(c.amount) || 0), 0);
-    const sumDebits = (debits || []).reduce((acc, d) => acc + (Number(d.amount) || 0), 0);
-    return sumCredits - sumDebits;
+    const toCents = value => Math.round(Number(value || 0) * 100);
+    const sumCreditsCents = (credits || []).reduce((acc, c) => acc + toCents(c.amount), 0);
+    const sumDebitsCents = (debits || []).reduce((acc, d) => acc + toCents(d.amount), 0);
+    return (sumCreditsCents - sumDebitsCents) / 100;
   }
 
   componentDidMount() {
@@ -72,7 +73,13 @@ class App extends Component {
     )
     const LogInComponent = () => (<LogIn user={this.state.currentUser} mockLogIn={this.mockLogIn} />)
     const CreditsComponent = () => (<Credits credits={this.state.creditList} />) 
-    const DebitsComponent = () => (<Debits debits={this.state.debitList} />) 
+    const DebitsComponent = () => (
+      <Debits
+        debits={this.state.debitList}
+        addDebit={this.addDebit}
+        accountBalance={this.state.accountBalance}
+      />
+    ) 
 
     // Important: Include the "basename" in Router, which is needed for deploying the React app to GitHub Pages
     return (
@@ -87,6 +94,33 @@ class App extends Component {
       </Router>
     );
   }
+
+  //debit
+  addDebit = (newDebit) => {
+
+    const amount = Number(newDebit.amount);
+
+    //check for valid debit entry
+    if (!newDebit.description || isNaN(amount) || amount <= 0) {
+      console.warn('Invalid debit entry', newDebit);
+      return;
+    }
+
+    //normalize
+    const entry = {
+      id: Date.now(), // simple id
+      description: newDebit.description,
+      amount: amount,
+      date: newDebit.date ? newDebit.date : new Date().toISOString()
+    };
+
+    this.setState(prev => {
+      const debitList = [...prev.debitList, entry];
+      const accountBalance = this.computeBalance(prev.creditList, debitList);
+      return { debitList, accountBalance };
+    });
+  } 
+
 }
 
 export default App;
