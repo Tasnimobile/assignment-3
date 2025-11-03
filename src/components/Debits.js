@@ -44,6 +44,7 @@ class Debits extends Component {
 
   render() {
     const { description, amount} = this.state;
+    const { accountBalance } = this.props;
     const debits = (this.props.debits || []).slice().sort(
       (a, b) => new Date(b.date) - new Date(a.date)
     );
@@ -51,6 +52,7 @@ class Debits extends Component {
     return (
       <div>
         <h1>Debits</h1>
+        <h3>Account Balance: ${accountBalance ? Number(accountBalance).toFixed(2) : '0.00'}</h3>
 
         <ul style={{ listStyleType: 'none', padding: 0, margin: 0 }}>
           {/* display debits */}
